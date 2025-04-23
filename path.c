@@ -9,21 +9,28 @@ char *pth_check(char *cmd)
 {
 	char *path = getenv("PATH");
 	char *path_dup = strdup(path);
-
+	char line_arg[1024];
 	char *dir = strtok(path_dup, ":");
-
-	char *all_path = malloc(strlen(dir) + strlen(cmd) + 2);
 
 	while (dir != NULL)
 	{
-		sprintf(all_path, "%s/%s", dir, cmd);
-		printf("The path is %s", all_path);
-		if (access(all_path, X_OK) == 0)
+		strcpy(line_arg, dir);
+		if (line_arg[strlen(line_arg) - 1] != '/')
 		{
-			return (all_path);
+			strcat(line_arg, "/");
+		}
+
+
+		strcat(line_arg, cmd);
+
+		if (access(line_arg, F_OK) == 0 && access(line_arg, X_OK) == 0)
+		{
+			free(path_dup);
+			return (strdup(line_arg));
 		}
 		dir = strtok(NULL, ":");
 	}
+	printf("File not found\n");
 	free(path_dup);
-	return (all_path);
+	return (NULL);
 }

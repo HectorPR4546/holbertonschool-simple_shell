@@ -11,62 +11,73 @@ int main(void)
 	char *line = NULL;
 	size_t len = 0;
 	char *token;
-	char *delim = " ";
+	char *delim = " \n";
+	char *line_arg[1024];
+	int pid;
 
-	write(1, "$ ", 2);
-	imput = getline(&line, &len, stdin);
-
-	if (imput == -1)
+	while (1)
 	{
-		perror("Imput error");
-		return (-1);
-	}
-	else
-	{
-		token = strtok(line, delim);
+		write(1, "$ ", 2);
+		imput = getline(&line, &len, stdin);
 
-		while (token != NULL)
+		if (imput == -1)
 		{
-			pid_t pid;
-
-			pid = fork();
-
-			if (pid == -1)
-			{
-				perror("Fork not working");
-				return (-1);
-			}
-			else if (pid == 0)
-			{
-				char *cmdPth = pth_check(token);
-
-				if (cmdPth == NULL)
-				{
-					perror("Command not listed");
-					exit(1);
-				}
-
-				execve(cmdPth, &token, __environ);
-
-				if (execve(cmdPth, &token, __environ) == -1)
-				{
-					perror("Fail to run");
-					exit(EXIT_FAILURE);
-				}
-			}
-			else
-			{
-				int stat;
-
-				waitpid(pid, &stat, 0);
-
-				if (WIFEXITED(stat) && WEXITSTATUS(stat) != 0)
-				{
-					printf("Child proc %d exited with non zero stat %d\n,", pid, WEXITSTATUS(stat));
-				}
-			}
-			token = strtok(NULL, delim);
+			perror("Imput error");
+			return (-1);
 		}
-		return (0);
+		else if (imput == 1)
+		{
+			continue;
+		}
+		else
+		{
+			int idx = 0;
+
+			token = strtok(line, delim);
+
+			while (token != NULL)
+			{
+				line_arg[idx] = token;
+				token = strtok(NULL, delim);
+				idx++;
+			}
+			line_arg[idx] = NULL;
+
+				pid = fork();
+
+				if (pid == -1)
+				{
+					perror("Fork not working");
+					free(line);
+					return (-1);
+				}
+				else if (pid == 0)
+				{
+					char *cmdPth = pth_check(line_arg[0]);
+
+					if (cmdPth != NULL)
+					{
+						execve(cmdPth, line_arg, __environ);
+
+						perror("Fail to run");
+						free(line);
+						exit(1);
+					}
+				}
+					else
+					{
+						int stat;
+
+						waitpid(pid, &stat, 0);
+
+						if (WIFEXITED(stat) && WEXITSTATUS(stat) != 0)
+						{
+							printf("Child proc %d exited with non zero stat %d\n,", pid, WEXITSTATUS(stat));
+						}
+					}
+		}
 	}
+	free(line);
+	return (0);
 }
+
