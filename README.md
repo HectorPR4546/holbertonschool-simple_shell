@@ -16,33 +16,27 @@ This project is a basic simple shell written in C that interprets and executes u
 ## Installation
 To compile the shell:
 
-'''
-
-gcc -Wall -Werror -Wextra -pedantic -std=gnu89 *.c -o hsh
-
-'''
+`gcc -Wall -Werror -Wextra -pedantic -std=gnu89 *.c -o hsh`
 
 ## Usage
 Run the shell with:
 
-'''
-./hsh
-'''
+`./hsh`
 
 Interactive mode:
 
-'''
+```
 $ ./hsh
 $ ls -l
 $ exit
-'''
+```
 
 Non-interactive mode:
 
-'''
+```
 echo "ls -l | ./hsh
 ./hsh < commands.txt
-'''
+```
 
 ## Features
 
@@ -55,29 +49,29 @@ echo "ls -l | ./hsh
 
 ## Built-in Commands
 
-'''exit''' Exits the shell
-'''env''' Prints enviroment variables
+`exit` Exits the shell
+`env` Prints enviroment variables
 
 ## Format Specifiers
 
-'''%s''' String (used to print command names or arguments)
-'''%d/%i''' Signed integer (used for status codes or loop counters)
-'''%c''' Character (used to print a single character)
-'''%u''' Unsigned int (e.g., for PID or return codes)
-'''%%''' Literal % character
+`%s` String (used to print command names or arguments)
+`%d/%i` Signed integer (used for status codes or loop counters)
+`%c` Character (used to print a single character)
+`%u` Unsigned int (e.g., for PID or return codes)
+`%%` Literal % character
 
 These are mainly used in the shell for debugging, error messages, or custom prompts/logs
 
 ## Example
 
-'''
+```
 $ ./hsh
 $ echo Hello, Shell!
 Hello, Shell!
 $ ls
 file1.c file2.c README.md
 $ exit
-'''
+```
 
 ## AUTHORS
 
@@ -86,9 +80,9 @@ $ exit
 
 # Contributing
 
-Pull requests are welcome. For major changes, please open an issue first
-to discuss what you would like to change.
+*Pull requests are welcome. For major changes, please open an issue first
+to discuss what you would like to change.*
 
 ## License
 
-Please notify us for permission to use this code.
+*Please notify us for permission to use this code.*
