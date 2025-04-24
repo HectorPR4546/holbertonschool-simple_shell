@@ -1,5 +1,7 @@
 #include "hsshell.h"
 
+static int command_status;
+
 /**
  * handle_builtins - Handles builtin commands
  * @args: Command arguments
@@ -11,19 +13,20 @@ int handle_builtins(char **args, char *line)
 	if (strcmp(args[0], "cd") == 0)
 	{
 		built_cd(args[1]);
+		command_status = 0;
 		return (1);
 	}
 	if (strcmp(args[0], "exit") == 0)
 	{
-		built_exit(args, line);
+		built_exit(args, line, command_status);
 	}
 	return (0);
 }
 
 /**
- * validate_command - Checks if command exists and is executable
+ * validate_command - Checks command validity
  * @args: Command arguments
- * Return: Status code (0 if valid, error code otherwise)
+ * Return: Status code
  */
 static int validate_command(char **args)
 {
@@ -51,7 +54,7 @@ static int validate_command(char **args)
 }
 
 /**
- * run_child_process - Executes command in child process
+ * run_child_process - Executes command in child
  * @args: Command arguments
  * @line: Input buffer
  */
@@ -85,15 +88,18 @@ static void run_child_process(char **args, char *line)
  */
 int handle_execution(char **args, char *line)
 {
-	int status;
 	pid_t pid;
+	int current_status;
 
 	if (handle_builtins(args, line))
-		return (0);
+		return (command_status);
 
-	status = validate_command(args);
-	if (status != 0)
-		return (status);
+	current_status = validate_command(args);
+	if (current_status != 0)
+	{
+		command_status = current_status;
+		return (current_status);
+	}
 
 	pid = fork();
 	if (pid == -1)
@@ -105,6 +111,7 @@ int handle_execution(char **args, char *line)
 	if (pid == 0)
 		run_child_process(args, line);
 
-	waitpid(pid, &status, 0);
-	return (WIFEXITED(status) ? WEXITSTATUS(status) : -1);
+	waitpid(pid, &current_status, 0);
+	command_status = WIFEXITED(current_status) ? WEXITSTATUS(current_status) : -1;
+	return (command_status);
 }

@@ -35,16 +35,14 @@ void built_cd(char *args)
 }
 
 /**
- * built_exit - Exits shell
- * @args: Exit arguments
+ * built_exit - Exits shell with status
+ * @args: Command arguments
  * @line: Input buffer
+ * @last_status: Status of last command
  */
-void built_exit(char **args, char *line)
+void built_exit(char **args, char *line, int last_status)
 {
-	int status = 0;
-
-	if (args[1])
-		status = atoi(args[1]);
+	int status = args[1] ? atoi(args[1]) : last_status;
 
 	free(line);
 	exit(status);
