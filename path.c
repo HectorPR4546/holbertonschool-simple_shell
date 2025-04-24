@@ -30,7 +30,6 @@ char *pth_check(char *cmd)
 		}
 		dir = strtok(NULL, ":");
 	}
-	printf("File not found\n");
 	free(path_dup);
-	return (NULL);
+	return (cmd);
 }
