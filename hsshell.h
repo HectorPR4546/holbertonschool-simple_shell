@@ -10,4 +10,8 @@
 
 int main(void);
 char *pth_check(char *cmd);
+extern char **environ;
+void built_cd(char *args);
+void built_exit(void);
+void error_ms(char *cmd);
 #endif

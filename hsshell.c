@@ -1,5 +1,7 @@
 #include "hsshell.h"
 
+void Bet_bypass(void);
+
 /**
  * main - User Imput Prompt
  * Return: 0 (succcess)
@@ -22,8 +24,15 @@ int main(void)
 
 		if (imput == -1)
 		{
-			perror("Imput error");
-			return (-1);
+			if (feof(stdin))
+			{
+				built_exit();
+			}
+			else
+			{
+				perror("Imput error");
+				return (-1);
+			}
 		}
 		else if (imput == 1)
 		{
@@ -43,6 +52,16 @@ int main(void)
 			}
 			line_arg[idx] = NULL;
 
+			if (strcmp(line_arg[0], "cd") == 0)
+			{
+				built_cd(line_arg[1]);
+			}
+			else if (strcmp(line_arg[0], "exit") == 0)
+			{
+				built_exit();
+			}
+			else
+			{
 				pid = fork();
 
 				if (pid == -1)
@@ -57,27 +76,26 @@ int main(void)
 
 					if (cmdPth != NULL)
 					{
-						execve(cmdPth, line_arg, __environ);
-
-						perror("Fail to run");
+						execve(cmdPth, line_arg, environ);
+						error_ms(line_arg[0]);
 						free(line);
 						exit(1);
 					}
 				}
-					else
+				else
+				{
+					int stat;
+
+					waitpid(pid, &stat, 0);
+
+					if (WIFEXITED(stat) && WEXITSTATUS(stat) != 0)
 					{
-						int stat;
-
-						waitpid(pid, &stat, 0);
-
-						if (WIFEXITED(stat) && WEXITSTATUS(stat) != 0)
-						{
-							printf("Child proc %d exited with non zero stat %d\n,", pid, WEXITSTATUS(stat));
-						}
+						printf("Child proc %d\n,", pid);
 					}
+				}
+			}
 		}
 	}
 	free(line);
 	return (0);
 }
-
