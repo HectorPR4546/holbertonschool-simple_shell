@@ -10,9 +10,9 @@ char *pth_check(char *cmd)
 	char *path = getenv("PATH");
 	char *path_copy, *dir;
 	char full_path[1024];
+	struct stat st;
 
-	/* Handle empty PATH or PATH not set */
-	if (!path || path[0] == '\0')
+	if (!path)
 		return (NULL);
 
 	path_copy = strdup(path);
@@ -21,7 +21,7 @@ char *pth_check(char *cmd)
 	while (dir)
 	{
 		snprintf(full_path, sizeof(full_path), "%s/%s", dir, cmd);
-		if (access(full_path, X_OK) == 0)
+		if (stat(full_path, &st) == 0 && (st.st_mode & S_IXUSR))
 		{
 			free(path_copy);
 			return (strdup(full_path));

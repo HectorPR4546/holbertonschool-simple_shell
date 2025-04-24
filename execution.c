@@ -6,7 +6,7 @@
  * @line: Input buffer
  * Return: 1 if builtin handled, 0 otherwise
  */
-static int handle_builtins(char **args, char *line)
+int handle_builtins(char **args, char *line)
 {
 	if (strcmp(args[0], "cd") == 0)
 	{
@@ -15,42 +15,9 @@ static int handle_builtins(char **args, char *line)
 	}
 	else if (strcmp(args[0], "exit") == 0)
 	{
-		free(line);
-		built_exit();
+		built_exit(args, line);
 	}
 	return (0);
-}
-
-/**
- * check_command_exists - Checks if command exists before forking
- * @args: Command arguments
- * @line: Input buffer
- * Return: 1 if exists, 0 if not
- */
-static int check_command_exists(char **args, char *line)
-{
-	char *cmd_path;
-
-	if (args[0][0] == '/' || args[0][0] == '.')
-	{
-		if (access(args[0], X_OK) == -1)
-		{
-			error_ms(args[0]);
-			free(line);
-			return (0);
-		}
-		return (1);
-	}
-
-	cmd_path = pth_check(args[0]);
-	if (!cmd_path)
-	{
-		error_ms(args[0]);
-		free(line);
-		return (0);
-	}
-	free(cmd_path);
-	return (1);
 }
 
 /**
@@ -61,16 +28,23 @@ static int check_command_exists(char **args, char *line)
 static void execute_child(char **args, char *line)
 {
 	char *cmd_path;
+	struct stat st;
 
 	if (args[0][0] == '/' || args[0][0] == '.')
 	{
-		execve(args[0], args, environ);
+		if (stat(args[0], &st) == 0 && (st.st_mode & S_IXUSR))
+		{
+			execve(args[0], args, environ);
+		}
 	}
 	else
 	{
 		cmd_path = pth_check(args[0]);
-		execve(cmd_path, args, environ);
-		free(cmd_path);
+		if (cmd_path)
+		{
+			execve(cmd_path, args, environ);
+			free(cmd_path);
+		}
 	}
 	error_ms(args[0]);
 	free(line);
@@ -81,24 +55,41 @@ static void execute_child(char **args, char *line)
  * handle_execution - Handles command execution
  * @args: Command arguments
  * @line: Input buffer
- * Return: 0 on success, -1 on failure
+ * Return: Exit status
  */
 int handle_execution(char **args, char *line)
 {
 	pid_t pid;
+	char *cmd_path;
+	struct stat st;
 
 	if (handle_builtins(args, line))
 		return (0);
 
-	/* Check command exists before forking */
-	if (!check_command_exists(args, line))
-		return (127);
+	/* Check if command exists before forking */
+	if (args[0][0] == '/' || args[0][0] == '.')
+	{
+		if (stat(args[0], &st) == -1 || !(st.st_mode & S_IXUSR))
+		{
+			error_ms(args[0]);
+			return (127);
+		}
+	}
+	else
+	{
+		cmd_path = pth_check(args[0]);
+		if (!cmd_path)
+		{
+			error_ms(args[0]);
+			return (127);
+		}
+		free(cmd_path);
+	}
 
 	pid = fork();
 	if (pid == -1)
 	{
 		perror("fork");
-		free(line);
 		return (-1);
 	}
 	if (pid == 0)

@@ -23,13 +23,13 @@ int is_empty(char *str)
  */
 void parse_input(char *line, char **args)
 {
-	char *token = strtok(line, " \n");
+	char *token = strtok(line, " \t\n");
 	int idx = 0;
 
-	while (token != NULL && idx < 1023)
+	while (token != NULL && idx < MAX_ARGS - 1)
 	{
 		args[idx++] = token;
-		token = strtok(NULL, " \n");
+		token = strtok(NULL, " \t\n");
 	}
 	args[idx] = NULL;
 }
@@ -40,9 +40,10 @@ void parse_input(char *line, char **args)
  */
 int main(void)
 {
-	char *line = NULL, *args[1024];
+	char *line = NULL, *args[MAX_ARGS];
 	size_t len = 0;
 	ssize_t read;
+	int status = 0;
 
 	while (1)
 	{
@@ -55,7 +56,7 @@ int main(void)
 			if (isatty(STDIN_FILENO))
 				write(STDOUT_FILENO, "\n", 1);
 			free(line);
-			exit(0);
+			exit(status);
 		}
 
 		if (read <= 1 || is_empty(line))
@@ -65,7 +66,16 @@ int main(void)
 		if (!args[0])
 			continue;
 
-		handle_execution(args, line);
+		if (strcmp(args[0], "env") == 0)
+		{
+			char **env = environ;
+
+			while (*env)
+				printf("%s\n", *env++);
+			continue;
+		}
+
+		status = handle_execution(args, line);
 	}
-	return (0);
+	return (status);
 }
