@@ -22,6 +22,38 @@ static int handle_builtins(char **args, char *line)
 }
 
 /**
+ * check_command_exists - Checks if command exists before forking
+ * @args: Command arguments
+ * @line: Input buffer
+ * Return: 1 if exists, 0 if not
+ */
+static int check_command_exists(char **args, char *line)
+{
+	char *cmd_path;
+
+	if (args[0][0] == '/' || args[0][0] == '.')
+	{
+		if (access(args[0], X_OK) == -1)
+		{
+			error_ms(args[0]);
+			free(line);
+			return (0);
+		}
+		return (1);
+	}
+
+	cmd_path = pth_check(args[0]);
+	if (!cmd_path)
+	{
+		error_ms(args[0]);
+		free(line);
+		return (0);
+	}
+	free(cmd_path);
+	return (1);
+}
+
+/**
  * execute_child - Handles child process execution
  * @args: Command arguments
  * @line: Input buffer
@@ -32,23 +64,11 @@ static void execute_child(char **args, char *line)
 
 	if (args[0][0] == '/' || args[0][0] == '.')
 	{
-		if (access(args[0], X_OK) == -1)
-		{
-			error_ms(args[0]);
-			free(line);
-			exit(127);
-		}
 		execve(args[0], args, environ);
 	}
 	else
 	{
 		cmd_path = pth_check(args[0]);
-		if (!cmd_path)
-		{
-			error_ms(args[0]);
-			free(line);
-			exit(127);
-		}
 		execve(cmd_path, args, environ);
 		free(cmd_path);
 	}
@@ -69,6 +89,10 @@ int handle_execution(char **args, char *line)
 
 	if (handle_builtins(args, line))
 		return (0);
+
+	/* Check command exists before forking */
+	if (!check_command_exists(args, line))
+		return (127);
 
 	pid = fork();
 	if (pid == -1)
