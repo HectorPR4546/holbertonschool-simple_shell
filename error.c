@@ -1,8 +1,8 @@
 #include "hsshell.h"
 
 /**
- * error_ms - Error message
- * @cmd: Command
+ * error_ms - Prints command error
+ * @cmd: Failed command
  */
 void error_ms(char *cmd)
 {

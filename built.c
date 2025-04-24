@@ -1,20 +1,16 @@
 #include "hsshell.h"
 
 /**
- * built_cd - cd command
- * @args: arguments
+ * built_cd - Changes directory
+ * @args: Directory path
  */
 void built_cd(char *args)
 {
-	char *dir = args;
-	char *home = getenv("HOME");
+	char *dir = args ? args : getenv("HOME");
 
-	if (dir == NULL)
-		dir = home;
-
-	if (dir == NULL)
+	if (!dir)
 	{
-		perror("cd: No HOME directory");
+		perror("cd: No HOME");
 		return;
 	}
 
@@ -23,7 +19,7 @@ void built_cd(char *args)
 }
 
 /**
- * built_exit - exit command
+ * built_exit - Exits shell
  */
 void built_exit(void)
 {
