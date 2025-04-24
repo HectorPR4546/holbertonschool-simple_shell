@@ -1,36 +1,87 @@
 #include "hsshell.h"
 
 /**
- * parse_input - Parse user input into arguments
- * @line: Input line
- * @args: Array to store arguments
+ * is_empty - Checks if string is empty (only spaces/tabs/newlines)
+ * @str: String to check
+ * Return: 1 if empty, 0 otherwise
  */
-void parse_input(char *line, char **args)
+int is_empty(char *str)
 {
-	char *token;
-	char *delim = " \n";
-	int idx = 0;
-
-	token = strtok(line, delim);
-	while (token != NULL)
+	while (*str)
 	{
-		args[idx] = token;
-		token = strtok(NULL, delim);
-		idx++;
+		if (*str != ' ' && *str != '\t' && *str != '\n')
+			return (0);
+		str++;
 	}
-	args[idx] = NULL;
+	return (1);
 }
 
 /**
- * execute_command - Execute a command
- * @args: Command and arguments
+ * handle_builtins - Handles builtin commands
+ * @args: Command arguments
+ * @line: Input line for cleanup
+ * Return: 1 if builtin handled, 0 otherwise
+ */
+int handle_builtins(char **args, char *line)
+{
+	if (strcmp(args[0], "cd") == 0)
+	{
+		built_cd(args[1]);
+		return (1);
+	}
+	else if (strcmp(args[0], "exit") == 0)
+	{
+		free(line);
+		built_exit();
+	}
+	return (0);
+}
+
+/**
+ * execute_child - Handles child process execution
+ * @args: Command arguments
+ * @line: Input line for cleanup
+ */
+void execute_child(char **args, char *line)
+{
+	char *cmdPth;
+
+	if (args[0][0] == '/' || args[0][0] == '.')
+	{
+		cmdPth = args[0];
+		if (access(cmdPth, X_OK) == -1)
+		{
+			error_ms(args[0]);
+			free(line);
+			exit(127);
+		}
+	}
+	else
+	{
+		cmdPth = pth_check(args[0]);
+		if (cmdPth == NULL)
+		{
+			error_ms(args[0]);
+			free(line);
+			exit(127);
+		}
+	}
+
+	execve(cmdPth, args, environ);
+	error_ms(args[0]);
+	free(line);
+	exit(127);
+}
+
+/**
+ * execute_command - Executes a command
+ * @args: Command arguments
  * @line: Input line for cleanup
  * Return: 0 on success, -1 on failure
  */
 int execute_command(char **args, char *line)
 {
 	int pid;
-	char *cmdPth;
 
 	pid = fork();
 	if (pid == -1)
@@ -41,37 +92,10 @@ int execute_command(char **args, char *line)
 	}
 
 	if (pid == 0)
-	{
-		if (args[0][0] == '/' || args[0][0] == '.')
-		{
-			cmdPth = args[0];
-			if (access(cmdPth, X_OK) == -1)
-			{
-				error_ms(args[0]);
-				free(line);
-				exit(127);
-			}
-		}
-		else
-		{
-			cmdPth = pth_check(args[0]);
-			if (cmdPth == NULL)
-			{
-				error_ms(args[0]);
-				free(line);
-				exit(127);
-			}
-		}
-
-		execve(cmdPth, args, environ);
-		error_ms(args[0]);
-		free(line);
-		exit(127);
-	}
+		execute_child(args, line);
 	else
-	{
 		waitpid(pid, NULL, 0);
-	}
+
 	return (0);
 }
 
@@ -101,24 +125,16 @@ int main(void)
 			built_exit();
 		}
 
-		if (imput == 1 || strspn(line, " \n") == strlen(line))
+		if (imput == 1 || is_empty(line))
 			continue;
 
 		parse_input(line, line_arg);
 
-		if (strcmp(line_arg[0], "cd") == 0)
-		{
-			built_cd(line_arg[1]);
-		}
-		else if (strcmp(line_arg[0], "exit") == 0)
-		{
-			free(line);
-			built_exit();
-		}
-		else
-		{
+		if (line_arg[0] == NULL)
+			continue;
+
+		if (!handle_builtins(line_arg, line))
 			execute_command(line_arg, line);
-		}
 	}
 	free(line);
 	return (0);
