@@ -19,6 +19,7 @@ int handle_builtins(char **args, char *line)
 	if (strcmp(args[0], "exit") == 0)
 	{
 		built_exit(args, line, command_status);
+		return (1);
 	}
 	return (0);
 }
