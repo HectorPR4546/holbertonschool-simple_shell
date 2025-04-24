@@ -21,6 +21,28 @@ int handle_builtins(char **args, char *line)
 }
 
 /**
+ * check_command_exists - Validates if command exists and is executable
+ * @args: Command arguments
+ * Return: 1 if exists and executable, 0 otherwise
+ */
+static int check_command_exists(char **args)
+{
+	struct stat st;
+	char *cmd_path;
+
+	if (args[0][0] == '/' || args[0][0] == '.')
+		return (stat(args[0], &st) == 0 && (st.st_mode & S_IXUSR));
+
+	cmd_path = pth_check(args[0]);
+	if (cmd_path)
+	{
+		free(cmd_path);
+		return (1);
+	}
+	return (0);
+}
+
+/**
  * execute_child - Handles child process execution
  * @args: Command arguments
  * @line: Input buffer
@@ -28,14 +50,10 @@ int handle_builtins(char **args, char *line)
 static void execute_child(char **args, char *line)
 {
 	char *cmd_path;
-	struct stat st;
 
 	if (args[0][0] == '/' || args[0][0] == '.')
 	{
-		if (stat(args[0], &st) == 0 && (st.st_mode & S_IXUSR))
-		{
-			execve(args[0], args, environ);
-		}
+		execve(args[0], args, environ);
 	}
 	else
 	{
@@ -52,39 +70,15 @@ static void execute_child(char **args, char *line)
 }
 
 /**
- * handle_execution - Handles command execution
+ * fork_and_execute - Forks process and executes command
  * @args: Command arguments
  * @line: Input buffer
- * Return: Exit status
+ * Return: Exit status of child process
  */
-int handle_execution(char **args, char *line)
+static int fork_and_execute(char **args, char *line)
 {
 	pid_t pid;
-	char *cmd_path;
-	struct stat st;
-
-	if (handle_builtins(args, line))
-		return (0);
-
-	/* Check if command exists before forking */
-	if (args[0][0] == '/' || args[0][0] == '.')
-	{
-		if (stat(args[0], &st) == -1 || !(st.st_mode & S_IXUSR))
-		{
-			error_ms(args[0]);
-			return (127);
-		}
-	}
-	else
-	{
-		cmd_path = pth_check(args[0]);
-		if (!cmd_path)
-		{
-			error_ms(args[0]);
-			return (127);
-		}
-		free(cmd_path);
-	}
+	int status;
 
 	pid = fork();
 	if (pid == -1)
@@ -95,6 +89,30 @@ int handle_execution(char **args, char *line)
 	if (pid == 0)
 		execute_child(args, line);
 	else
-		waitpid(pid, NULL, 0);
+	{
+		waitpid(pid, &status, 0);
+		if (WIFEXITED(status))
+			return (WEXITSTATUS(status));
+	}
 	return (0);
+}
+
+/**
+ * handle_execution - Handles command execution
+ * @args: Command arguments
+ * @line: Input buffer
+ * Return: Exit status
+ */
+int handle_execution(char **args, char *line)
+{
+	if (handle_builtins(args, line))
+		return (0);
+
+	if (!check_command_exists(args))
+	{
+		error_ms(args[0]);
+		return (127);
+	}
+
+	return (fork_and_execute(args, line));
 }
