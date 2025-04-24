@@ -13,7 +13,7 @@ int handle_builtins(char **args, char *line)
 		built_cd(args[1]);
 		return (1);
 	}
-	else if (strcmp(args[0], "exit") == 0)
+	if (strcmp(args[0], "exit") == 0)
 	{
 		built_exit(args, line);
 	}
@@ -21,25 +21,50 @@ int handle_builtins(char **args, char *line)
 }
 
 /**
- * execute_child - Executes command in child process
+ * validate_command - Checks if command exists and is executable
  * @args: Command arguments
- * @line: Input buffer
+ * Return: Status code (0 if valid, error code otherwise)
  */
-static void execute_child(char **args, char *line)
+static int validate_command(char **args)
 {
-	char *cmd_path;
 	struct stat st;
 
 	if (args[0][0] == '/' || args[0][0] == '.')
 	{
-		if (stat(args[0], &st) == 0 && (st.st_mode & S_IXUSR))
+		if (stat(args[0], &st) == -1 || !(st.st_mode & S_IXUSR))
 		{
-			execve(args[0], args, environ);
+			error_ms(args[0]);
+			return (2);
 		}
+		return (0);
+	}
+
+	char *cmd_path = pth_check(args[0]);
+
+	if (!cmd_path)
+	{
+		error_ms(args[0]);
+		return (127);
+	}
+	free(cmd_path);
+	return (0);
+}
+
+/**
+ * run_child_process - Executes command in child process
+ * @args: Command arguments
+ * @line: Input buffer
+ */
+static void run_child_process(char **args, char *line)
+{
+	if (args[0][0] == '/' || args[0][0] == '.')
+	{
+		execve(args[0], args, environ);
 	}
 	else
 	{
-		cmd_path = pth_check(args[0]);
+		char *cmd_path = pth_check(args[0]);
+
 		if (cmd_path)
 		{
 			execve(cmd_path, args, environ);
@@ -55,28 +80,19 @@ static void execute_child(char **args, char *line)
  * handle_execution - Main execution handler
  * @args: Command arguments
  * @line: Input buffer
- * Return: Exit status of command
+ * Return: Exit status
  */
 int handle_execution(char **args, char *line)
 {
-	pid_t pid;
 	int status;
+	pid_t pid;
 
 	if (handle_builtins(args, line))
 		return (0);
 
-	/* Check if command exists before forking */
-	if (args[0][0] != '/' && args[0][0] != '.')
-	{
-		char *cmd_path = pth_check(args[0]);
-
-		if (!cmd_path)
-		{
-			error_ms(args[0]);
-			return (127);
-		}
-		free(cmd_path);
-	}
+	status = validate_command(args);
+	if (status != 0)
+		return (status);
 
 	pid = fork();
 	if (pid == -1)
@@ -86,14 +102,8 @@ int handle_execution(char **args, char *line)
 	}
 
 	if (pid == 0)
-	{
-		execute_child(args, line);
-	}
-	else
-	{
-		waitpid(pid, &status, 0);
-		if (WIFEXITED(status))
-			return (WEXITSTATUS(status));
-	}
-	return (0);
+		run_child_process(args, line);
+
+	waitpid(pid, &status, 0);
+	return (WIFEXITED(status) ? WEXITSTATUS(status) : -1);
 }
