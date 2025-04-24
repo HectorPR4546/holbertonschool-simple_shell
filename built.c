@@ -3,33 +3,23 @@
 /**
  * built_cd - cd command
  * @args: arguments
- * Return: 0 Success or -1 fail
  */
 void built_cd(char *args)
 {
-	if (args == NULL)
-	{
-		char *home = getenv("HOME");
+	char *dir = args;
+	char *home = getenv("HOME");
 
-		if (home == NULL)
-		{
-			perror("cd: HOME env is not set\n");
-		}
-		else
-		{
-			if (chdir(home) != 0)
-			{
-				perror("Fail to change directory");
-			}
-		}
-	}
-	else
+	if (dir == NULL)
+		dir = home;
+
+	if (dir == NULL)
 	{
-		if (chdir(args) != 0)
-		{
-			perror("Fail to change directory");
-		}
+		perror("cd: No HOME directory");
+		return;
 	}
+
+	if (chdir(dir) != 0)
+		perror("cd");
 }
 
 /**
@@ -37,6 +27,5 @@ void built_cd(char *args)
  */
 void built_exit(void)
 {
-	printf("\nExit hsshell...\n");
 	exit(0);
 }
