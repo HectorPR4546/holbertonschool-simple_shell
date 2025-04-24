@@ -35,9 +35,9 @@ void built_cd(char *args)
 }
 
 /**
- * built_exit - Exits shell with status
- * @args: Command arguments (including optional status)
- * @line: Input buffer to free
+ * built_exit - Exits shell
+ * @args: Exit arguments
+ * @line: Input buffer
  */
 void built_exit(char **args, char *line)
 {
