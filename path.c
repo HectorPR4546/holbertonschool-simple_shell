@@ -7,7 +7,7 @@
  */
 char *pth_check(char *cmd)
 {
-	char *path = getenv("PATH");
+	char *path = _getenv("PATH");
 	char *path_copy, *dir;
 	char full_path[1024];
 	struct stat st;

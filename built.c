@@ -6,7 +6,7 @@
  */
 void built_cd(char *args)
 {
-	char *dir = args ? args : getenv("HOME");
+	char *dir = args ? args : _getenv("HOME");
 	char cwd[1024];
 
 	if (!dir)
@@ -21,7 +21,17 @@ void built_cd(char *args)
 	if (chdir(dir) != 0)
 		perror("cd");
 	else
-		setenv("PWD", dir, 1);
+	{
+		char *new_pwd = getcwd(cwd, sizeof(cwd));
+
+		if (new_pwd)
+		{
+			char pwd_var[1024];
+
+			snprintf(pwd_var, sizeof(pwd_var), "PWD=%s", new_pwd);
+			putenv(strdup(pwd_var));
+		}
+	}
 }
 
 /**
