@@ -6,8 +6,8 @@
  */
 void error_ms(char *cmd)
 {
-	char *msg = ": not found\n";
+	char error[256];
+	int len = snprintf(error, sizeof(error), "./hsh: 1: %s: not found\n", cmd);
 
-	write(STDERR_FILENO, cmd, strlen(cmd));
-	write(STDERR_FILENO, msg, strlen(msg));
+	write(STDERR_FILENO, error, len);
 }
