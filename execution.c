@@ -28,6 +28,7 @@ int handle_builtins(char **args, char *line)
 static int validate_command(char **args)
 {
 	struct stat st;
+	char *cmd_path;
 
 	if (args[0][0] == '/' || args[0][0] == '.')
 	{
@@ -39,8 +40,7 @@ static int validate_command(char **args)
 		return (0);
 	}
 
-	char *cmd_path = pth_check(args[0]);
-
+	cmd_path = pth_check(args[0]);
 	if (!cmd_path)
 	{
 		error_ms(args[0]);
@@ -57,14 +57,15 @@ static int validate_command(char **args)
  */
 static void run_child_process(char **args, char *line)
 {
+	char *cmd_path;
+
 	if (args[0][0] == '/' || args[0][0] == '.')
 	{
 		execve(args[0], args, environ);
 	}
 	else
 	{
-		char *cmd_path = pth_check(args[0]);
-
+		cmd_path = pth_check(args[0]);
 		if (cmd_path)
 		{
 			execve(cmd_path, args, environ);
