@@ -7,10 +7,12 @@
  */
 char *pth_check(char *cmd)
 {
-	char *path = getenv("PATH"), *path_copy, *dir;
+	char *path = getenv("PATH");
+	char *path_copy, *dir;
 	char full_path[1024];
 
-	if (!path)
+	/* Handle empty PATH or PATH not set */
+	if (!path || path[0] == '\0')
 		return (NULL);
 
 	path_copy = strdup(path);
