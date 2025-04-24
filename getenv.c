@@ -1,11 +1,11 @@
 #include "hsshell.h"
 
 /**
- * _getenv - Gets environment variable value
- * @name: Variable name
+ * custom_getenv - Custom implementation of getenv
+ * @name: Environment variable name
  * Return: Value or NULL if not found
  */
-char *_getenv(const char *name)
+char *custom_getenv(const char *name)
 {
 	char **env = environ;
 	size_t len = strlen(name);
