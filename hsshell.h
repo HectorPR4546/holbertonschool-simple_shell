@@ -13,15 +13,16 @@
 
 extern char **environ;
 
+/* Function prototypes */
 int main(void);
 char *pth_check(char *cmd);
 void built_cd(char *args);
-void built_exit(char **args, char *line);
+void built_exit(char **args, char *line, int last_status);
 void error_ms(char *cmd);
 int is_empty(char *str);
 void parse_input(char *line, char **args);
 int handle_execution(char **args, char *line);
 int handle_builtins(char **args, char *line);
-char *_getenv(const char *name);
+char *custom_getenv(const char *name);
 
 #endif
