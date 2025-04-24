@@ -1,99 +1,123 @@
 #include "hsshell.h"
 
-void Bet_bypass(void);
+/**
+ * parse_input - Parse user input into arguments
+ * @line: Input line
+ * @args: Array to store arguments
+ */
+void parse_input(char *line, char **args)
+{
+	char *token;
+	char *delim = " \n";
+	int idx = 0;
+
+	token = strtok(line, delim);
+	while (token != NULL)
+	{
+		args[idx] = token;
+		token = strtok(NULL, delim);
+		idx++;
+	}
+	args[idx] = NULL;
+}
 
 /**
- * main - User Imput Prompt
- * Return: 0 (succcess)
+ * execute_command - Execute a command
+ * @args: Command and arguments
+ * @line: Input line for cleanup
+ * Return: 0 on success, -1 on failure
  */
+int execute_command(char **args, char *line)
+{
+	int pid;
+	char *cmdPth;
 
+	pid = fork();
+	if (pid == -1)
+	{
+		perror("Fork failed");
+		free(line);
+		return (-1);
+	}
+
+	if (pid == 0)
+	{
+		if (args[0][0] == '/' || args[0][0] == '.')
+		{
+			cmdPth = args[0];
+			if (access(cmdPth, X_OK) == -1)
+			{
+				error_ms(args[0]);
+				free(line);
+				exit(127);
+			}
+		}
+		else
+		{
+			cmdPth = pth_check(args[0]);
+			if (cmdPth == NULL)
+			{
+				error_ms(args[0]);
+				free(line);
+				exit(127);
+			}
+		}
+
+		execve(cmdPth, args, environ);
+		error_ms(args[0]);
+		free(line);
+		exit(127);
+	}
+	else
+	{
+		waitpid(pid, NULL, 0);
+	}
+	return (0);
+}
+
+/**
+ * main - User Input Prompt
+ * Return: 0 (success)
+ */
 int main(void)
 {
 	int imput;
 	char *line = NULL;
 	size_t len = 0;
-	char *token;
-	char *delim = " \n";
 	char *line_arg[1024];
-	int pid;
 
 	while (1)
 	{
-		write(1, "$ ", 2);
+		if (isatty(STDIN_FILENO))
+			write(1, "$ ", 2);
+
 		imput = getline(&line, &len, stdin);
 
 		if (imput == -1)
 		{
-			if (feof(stdin))
-			{
-				built_exit();
-			}
-			else
-			{
-				perror("Imput error");
-				return (-1);
-			}
+			if (isatty(STDIN_FILENO))
+				write(1, "\n", 1);
+			free(line);
+			built_exit();
 		}
-		else if (imput == 1)
-		{
+
+		if (imput == 1 || strspn(line, " \n") == strlen(line))
 			continue;
+
+		parse_input(line, line_arg);
+
+		if (strcmp(line_arg[0], "cd") == 0)
+		{
+			built_cd(line_arg[1]);
+		}
+		else if (strcmp(line_arg[0], "exit") == 0)
+		{
+			free(line);
+			built_exit();
 		}
 		else
 		{
-			int idx = 0;
-
-			token = strtok(line, delim);
-
-			while (token != NULL)
-			{
-				line_arg[idx] = token;
-				token = strtok(NULL, delim);
-				idx++;
-			}
-			line_arg[idx] = NULL;
-
-			if (strcmp(line_arg[0], "cd") == 0)
-			{
-				built_cd(line_arg[1]);
-			}
-			else if (strcmp(line_arg[0], "exit") == 0)
-			{
-				built_exit();
-			}
-			else
-			{
-				pid = fork();
-
-				if (pid == -1)
-				{
-					perror("Fork not working");
-					free(line);
-					return (-1);
-				}
-				else if (pid == 0)
-				{
-					char *cmdPth = pth_check(line_arg[0]);
-
-					if (cmdPth != NULL)
-					{
-						execve(cmdPth, line_arg, environ);
-						error_ms(line_arg[0]);
-						free(line);
-						exit(1);
-					}
-				}
-				else
-				{
-					int stat;
-
-					waitpid(pid, &stat, 0);
-
-					if (WIFEXITED(stat) && WEXITSTATUS(stat) != 0)
-					{
-						printf("Child proc %d\n,", pid);
-					}
-				}
-			}
+			execute_command(line_arg, line);
 		}
 	}
 	free(line);
