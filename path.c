@@ -1,35 +1,31 @@
 #include "hsshell.h"
 
 /**
- * pth_check - Find the Path
- * @cmd: Takes token argument
- * Return: path or NULL
+ * pth_check - Finds command in PATH
+ * @cmd: Command to find
+ * Return: Full path or NULL
  */
 char *pth_check(char *cmd)
 {
-	char *path = getenv("PATH");
-	char *path_dup, *dir;
-	char line_arg[1024];
+	char *path = getenv("PATH"), *path_copy, *dir;
+	char full_path[1024];
 
-	if (path == NULL)
+	if (!path)
 		return (NULL);
 
-	path_dup = strdup(path);
-	dir = strtok(path_dup, ":");
+	path_copy = strdup(path);
+	dir = strtok(path_copy, ":");
 
-	while (dir != NULL)
+	while (dir)
 	{
-		strcpy(line_arg, dir);
-		strcat(line_arg, "/");
-		strcat(line_arg, cmd);
-
-		if (access(line_arg, X_OK) == 0)
+		snprintf(full_path, sizeof(full_path), "%s/%s", dir, cmd);
+		if (access(full_path, X_OK) == 0)
 		{
-			free(path_dup);
-			return (strdup(line_arg));
+			free(path_copy);
+			return (strdup(full_path));
 		}
 		dir = strtok(NULL, ":");
 	}
-	free(path_dup);
+	free(path_copy);
 	return (NULL);
 }

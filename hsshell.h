@@ -15,7 +15,9 @@ char *pth_check(char *cmd);
 void built_cd(char *args);
 void built_exit(void);
 void error_ms(char *cmd);
-int execute_command(char **args, char *line);
+int is_empty(char *str);
 void parse_input(char *line, char **args);
+
+int handle_execution(char **args, char *line);
 
 #endif
