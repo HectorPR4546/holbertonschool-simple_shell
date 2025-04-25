@@ -14,7 +14,11 @@ This project is a basic simple shell written in C that interprets and executes u
 6. Simple shell 1.0
 
 ## Installation
+<<<<<<< HEAD
 To compile the shell:
+=======
+To compile the code:
+>>>>>>> e4f1d525ccd1d0f823277547f70252fda49d419e
 
 `gcc -Wall -Werror -Wextra -pedantic -std=gnu89 *.c -o hsh`
 
@@ -30,7 +34,6 @@ $ ./hsh
 $ ls -l
 $ exit
 ```
-
 Non-interactive mode:
 
 ```
@@ -85,4 +88,8 @@ to discuss what you would like to change.*
 
 ## License
 
+<<<<<<< HEAD
 *Please notify us for permission to use this code.*
+=======
+_Please notify us for permission to use this code._
+>>>>>>> e4f1d525ccd1d0f823277547f70252fda49d419e
