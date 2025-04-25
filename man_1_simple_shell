@@ -1,0 +1,90 @@
+.TH SIMPLE_SHELL 1 "April 2025" "simple_shell 1.0" "User Commands"
+
+.SH NAME
+simple_shell - a basic Unix shell implemented in C
+
+.SH SYPNOSIS
+.B simple_shell
+.RI [ OPTIONS ]
+.RI [ FILE ]
+
+.SH DESCRIPTION
+.B simple_shell
+is a lightweight, Unix-compatible command-line interpreter written in C programming language.
+It supports the execution of both built-in and external commands, as well as basic environment variable handling.
+
+.SH OPTIONS
+.TP
+.B -h, --help
+Display usage information and exit.
+
+.TP
+.B -v, --verbose
+Enable verbose mode, printing detailed logs of command parsing and execution steps.
+
+.SH ARGUMENTS
+.TP
+.B file
+If provided,
+.B simple_shell
+reads and executes commands from the specified file instead of from standard input.
+
+.SH FEATURES
+.TP
+\- Interactive and non-interactive execution modes.
+.TP
+\- Command parsing, forking, and PATH-based execution.
+.TP
+\- Built-in commands:
+.RS
+.B cd [directory]
+\- Change the current directory.
+.br
+.B env
+\- Print environment variables.
+.br
+.B exit [status]
+\- Exit the shell with a status code.
+.RE
+
+.SH USAGE
+.TP
+Start the shell in interactive mode:
+.B
+$ ./simple_shell
+
+.TP
+Start the shell in verbose mode:
+.B
+$ ./simple_shell -v
+
+.TP
+Run a script in non-interactive mode:
+.B
+$ ./simple_shell script.sh
+
+.TP
+View help information:
+.B
+$ ./simple_shell -h
+
+.SH FILES
+.TP
+.B simple_shell.c
+Main program.
+.TP
+.B builtins.c
+Built-in commands.
+.TP
+.B utils.c
+Helper functions.
+
+.SH BUGS
+No known bugs. Report any issues on the repository.
+
+.SH AUTHORS
+Hector Perez, Nayshka Oliveras
+
+.SH SEE ALSO
+.BR sh(1),
+.BR bash(1)
